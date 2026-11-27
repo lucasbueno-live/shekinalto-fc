@@ -39,6 +39,13 @@ export const playerPhotos = pgTable("player_photos", {
   updatedAt: ts().notNull().defaultNow(),
 });
 
+/** Configurações gerais do app (ex.: invite_code, o código do link de convite). */
+export const settings = pgTable("settings", {
+  key: text().primaryKey(),
+  value: text().notNull(),
+  updatedAt: ts().notNull().defaultNow(),
+});
+
 /** Votos são privados: só o servidor lê, e só agregados saem para as telas. */
 export const votes = pgTable(
   "votes",

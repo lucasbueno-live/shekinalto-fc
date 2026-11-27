@@ -43,8 +43,9 @@ export function LoginForm({ players }: { players: Option[] }) {
               </button>
             </li>
           ))}
-          {filtered.length === 0 && <li className="px-4 py-4 text-chalk-dim">Ninguém com esse nome. Peça ao organizador para te cadastrar.</li>}
+          {filtered.length === 0 && <li className="px-4 py-4 text-chalk-dim">Ninguém com esse nome. Peça ao organizador o link de convite para criar seu jogador.</li>}
         </ul>
+        <p className="text-sm text-chalk-dim">Seu nome não está aqui? Peça ao organizador o link de convite do grupo.</p>
       </div>
     );
   }

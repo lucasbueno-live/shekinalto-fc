@@ -8,6 +8,7 @@ import { getDb, schema } from "@/db";
 import { requireAdmin, requirePlayer } from "@/lib/auth";
 import { attrsFor, GK_ROLES, POSITIONS, type GkRole, type Position, type Ratings } from "@/lib/domain";
 import { evaluate } from "@/lib/draw";
+import { isValidInvite, rotateInviteCode } from "@/lib/invite";
 import { listPlayers, listSignups, toDrawPlayer } from "@/lib/queries";
 import { createSession, destroySession } from "@/lib/session";
 
@@ -154,6 +155,53 @@ export async function changePin(_: FormState, fd: FormData): Promise<FormState> 
   const db = await getDb();
   await db.update(schema.players).set({ pinHash: await bcrypt.hash(next, 10) }).where(eq(schema.players.id, me.id));
   return { ok: "PIN trocado." };
+}
+
+// ---------- convite ----------
+
+/** Cadastro feito pela própria pessoa, a partir do link de convite. */
+export async function joinWithInvite(_: FormState, fd: FormData): Promise<FormState> {
+  const code = str(fd, "code");
+  if (!(await isValidInvite(code))) {
+    return { error: "Esse link de convite não vale mais. Peça o link novo ao organizador." };
+  }
+  const name = str(fd, "name").slice(0, 40);
+  const pin = str(fd, "pin");
+  const pin2 = str(fd, "pin2");
+  const primary = asPosition(str(fd, "primary"));
+  if (name.length < 2) return { error: "Digite seu nome." };
+  if (!primary) return { error: "Escolha sua posição principal." };
+  if (!isPin(pin)) return { error: "O PIN precisa ter 4 números." };
+  if (pin !== pin2) return { error: "Os dois PINs não batem. Digite de novo." };
+
+  const db = await getDb();
+  const existing = await db.select({ name: schema.players.name, nickname: schema.players.nickname }).from(schema.players);
+  const norm = (s: string) => s.trim().toLocaleLowerCase("pt-BR");
+  if (existing.some((p) => norm(p.name) === norm(name) || (p.nickname && norm(p.nickname) === norm(name)))) {
+    return { error: "Já tem alguém no elenco com esse nome. Se for você, entre pela tela de entrada; se não, use nome e sobrenome." };
+  }
+
+  const gkRole: GkRole = primary === "GOL" ? "fixo" : asGkRole(str(fd, "gkRole")) === "fixo" ? "quebra_galho" : asGkRole(str(fd, "gkRole"));
+  const [p] = await db
+    .insert(schema.players)
+    .values({
+      name,
+      primaryPosition: primary,
+      secondaryPositions: readSecondary(fd, primary),
+      gkRole,
+      pinHash: await bcrypt.hash(pin, 10),
+    })
+    .returning();
+  await createSession(p.id);
+  revalidatePath("/", "layout");
+  redirect("/perfil?novo=1");
+}
+
+export async function regenerateInvite(): Promise<FormState> {
+  await requireAdmin();
+  await rotateInviteCode();
+  revalidatePath("/admin");
+  return { ok: "Link novo gerado. O antigo não funciona mais." };
 }
 
 // ---------- foto da carta ----------

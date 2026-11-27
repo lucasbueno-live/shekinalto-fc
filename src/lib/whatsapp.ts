@@ -25,4 +25,8 @@ export function inviteText(dateLabel: string, place: string | null, url: string)
   return `⚽ Lista do jogo de ${dateLabel}${place ? `, ${place}` : ""}.\nConfirma aqui se você vai: ${url}`;
 }
 
+export function inviteJoinText(url: string) {
+  return `⚽ Bora entrar no elenco do Shekinalto FC! Crie seu jogador por este link (é só nosso, não repassa): ${url}`;
+}
+
 export const whatsappUrl = (text: string) => `https://wa.me/?text=${encodeURIComponent(text)}`;

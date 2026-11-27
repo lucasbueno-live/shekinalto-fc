@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState, useTransition } from "react";
-import { closeMatch, createMatch, createPlayer, resetPin, setPlayerActive, setPlayerRole, type FormState } from "@/app/actions";
+import { closeMatch, createMatch, createPlayer, regenerateInvite, resetPin, setPlayerActive, setPlayerRole, type FormState } from "@/app/actions";
 import { PhotoPicker } from "@/components/PhotoPicker";
 import { PositionFields } from "@/components/PositionFields";
 import { Button, FormMessage, inputCls } from "@/components/ui";
@@ -118,5 +118,27 @@ export function PlayerAdminRow(props: { id: string; name: string; photoUrl: stri
         </div>
       )}
     </li>
+  );
+}
+
+export function NewInviteButton() {
+  const [pending, start] = useTransition();
+  const [state, setState] = useState<FormState>();
+  return (
+    <div className="flex flex-col gap-1">
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() => {
+          if (confirm("Gerar um link novo? O link atual para de funcionar. Quem já se cadastrou continua no elenco.")) {
+            start(async () => setState(await regenerateInvite()));
+          }
+        }}
+        className="w-fit text-sm font-semibold text-chalk-dim underline underline-offset-4"
+      >
+        {pending ? "Gerando…" : "Gerar link novo (se o atual vazou)"}
+      </button>
+      <FormMessage state={state} />
+    </div>
   );
 }

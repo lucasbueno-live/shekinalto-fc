@@ -3,9 +3,10 @@ import { formatMatchDate, PageTitle, Panel, Section } from "@/components/ui";
 import { requireAdmin } from "@/lib/auth";
 import { POSITION_LABEL } from "@/lib/domain";
 import { displayName, getCurrentMatch, listPlayers } from "@/lib/queries";
-import { inviteText } from "@/lib/whatsapp";
+import { inviteJoinText, inviteText } from "@/lib/whatsapp";
 import { CopyButton } from "../client-bits";
-import { CloseMatchButton, MatchForm, NewPlayerForm, PlayerAdminRow } from "./forms";
+import { CloseMatchButton, MatchForm, NewInviteButton, NewPlayerForm, PlayerAdminRow } from "./forms";
+import { getInviteCode } from "@/lib/invite";
 
 function nextSaturdayISO() {
   const d = new Date();
@@ -15,7 +16,7 @@ function nextSaturdayISO() {
 
 export default async function AdminPage() {
   const me = await requireAdmin();
-  const [match, players] = await Promise.all([getCurrentMatch(), listPlayers({ includeInactive: true })]);
+  const [match, players, inviteCode] = await Promise.all([getCurrentMatch(), listPlayers({ includeInactive: true }), getInviteCode()]);
   const h = await headers();
   const origin = `${h.get("x-forwarded-proto") ?? "http"}://${h.get("host")}`;
   const sorted = [...players].sort((a, b) => Number(b.active) - Number(a.active) || displayName(a).localeCompare(displayName(b), "pt-BR"));
@@ -32,7 +33,7 @@ export default async function AdminPage() {
                 Lista aberta para <strong>{formatMatchDate(match.date)}</strong>
                 {match.place ? `, ${match.place}` : ""}.
               </p>
-              <CopyButton text={inviteText(formatMatchDate(match.date), match.place, origin)} label="Copiar convite" />
+              <CopyButton text={inviteText(formatMatchDate(match.date), match.place, origin)} label="Copiar lista do jogo" />
               <CloseMatchButton matchId={match.id} />
             </div>
           ) : (
@@ -47,7 +48,16 @@ export default async function AdminPage() {
         </Panel>
       </Section>
 
-      <Section title="Cadastrar jogador">
+      <Section title="Convite para o elenco">
+        <Panel className="flex flex-col gap-3">
+          <p className="text-chalk-dim">Mande este link no grupo. Quem abrir cria o próprio jogador, com nome, posição e PIN.</p>
+          <p className="break-all rounded-md bg-turf-950/70 px-3 py-2 text-sm">{`${origin}/convite/${inviteCode}`}</p>
+          <CopyButton text={inviteJoinText(`${origin}/convite/${inviteCode}`)} label="Copiar convite" />
+          <NewInviteButton />
+        </Panel>
+      </Section>
+
+      <Section title="Cadastrar jogador na mão">
         <Panel>
           <NewPlayerForm />
         </Panel>
