@@ -46,6 +46,17 @@ export const settings = pgTable("settings", {
   updatedAt: ts().notNull().defaultNow(),
 });
 
+/** Celulares que ativaram os avisos (web push). Um jogador pode ter mais de um aparelho. */
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  endpoint: text().primaryKey(),
+  playerId: uuid()
+    .notNull()
+    .references(() => players.id, { onDelete: "cascade" }),
+  p256dh: text().notNull(),
+  auth: text().notNull(),
+  createdAt: ts().notNull().defaultNow(),
+});
+
 /** Votos são privados: só o servidor lê, e só agregados saem para as telas. */
 export const votes = pgTable(
   "votes",

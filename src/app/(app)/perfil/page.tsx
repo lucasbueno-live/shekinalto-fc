@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { logout } from "@/app/actions";
 import { PhotoPicker } from "@/components/PhotoPicker";
+import { PushToggle } from "@/components/PushToggle";
+import { getVapidKeys } from "@/lib/push";
 import { PlayerCard } from "@/components/PlayerCard";
 import { Button, PageTitle, Panel, Section } from "@/components/ui";
 import { requirePlayer } from "@/lib/auth";
@@ -10,7 +12,8 @@ import { PinForm, ProfileForm } from "./forms";
 export default async function PerfilPage({ searchParams }: { searchParams: Promise<{ novo?: string }> }) {
   const { novo } = await searchParams;
   const me = await requirePlayer();
-  const view = (await getPlayer(me.id))!;
+  const [view, vapid] = await Promise.all([getPlayer(me.id), getVapidKeys()]);
+  if (!view) return null;
 
   return (
     <>
@@ -31,6 +34,12 @@ export default async function PerfilPage({ searchParams }: { searchParams: Promi
           <PlayerCard id={view.id} name={displayName(view)} photoUrl={view.photoUrl} primaryPosition={view.primaryPosition} gkRole={view.gkRole} card={view.card} />
         </div>
       </div>
+
+      <Section title="Avisos de jogo">
+        <Panel>
+          <PushToggle publicKey={vapid.publicKey} />
+        </Panel>
+      </Section>
 
       <Section title="Foto da carta">
         <Panel>

@@ -9,6 +9,7 @@ import { requireAdmin, requirePlayer } from "@/lib/auth";
 import { attrsFor, GK_ROLES, POSITIONS, type GkRole, type Position, type Ratings } from "@/lib/domain";
 import { evaluate } from "@/lib/draw";
 import { isValidInvite, rotateInviteCode } from "@/lib/invite";
+import { notifyAll } from "@/lib/push";
 import { listPlayers, listSignups, toDrawPlayer } from "@/lib/queries";
 import { createSession, destroySession } from "@/lib/session";
 
@@ -155,6 +156,39 @@ export async function changePin(_: FormState, fd: FormData): Promise<FormState> 
   const db = await getDb();
   await db.update(schema.players).set({ pinHash: await bcrypt.hash(next, 10) }).where(eq(schema.players.id, me.id));
   return { ok: "PIN trocado." };
+}
+
+// ---------- avisos (web push) ----------
+
+type SubscriptionInput = { endpoint: string; keys: { p256dh: string; auth: string } };
+
+export async function subscribePush(sub: SubscriptionInput): Promise<FormState> {
+  const me = await requirePlayer();
+  const ok =
+    typeof sub?.endpoint === "string" &&
+    /^https:\/\//.test(sub.endpoint) &&
+    sub.endpoint.length < 1000 &&
+    typeof sub.keys?.p256dh === "string" &&
+    typeof sub.keys?.auth === "string";
+  if (!ok) return { error: "Não deu para ativar os avisos neste celular." };
+  const db = await getDb();
+  await db
+    .insert(schema.pushSubscriptions)
+    .values({ endpoint: sub.endpoint, playerId: me.id, p256dh: sub.keys.p256dh, auth: sub.keys.auth })
+    .onConflictDoUpdate({
+      target: schema.pushSubscriptions.endpoint,
+      set: { playerId: me.id, p256dh: sub.keys.p256dh, auth: sub.keys.auth },
+    });
+  return { ok: "Avisos ativados neste celular." };
+}
+
+export async function unsubscribePush(endpoint: string): Promise<FormState> {
+  const me = await requirePlayer();
+  const db = await getDb();
+  await db
+    .delete(schema.pushSubscriptions)
+    .where(and(eq(schema.pushSubscriptions.endpoint, endpoint), eq(schema.pushSubscriptions.playerId, me.id)));
+  return { ok: "Avisos desligados neste celular." };
 }
 
 // ---------- convite ----------
@@ -314,7 +348,20 @@ export async function createMatch(_: FormState, fd: FormData): Promise<FormState
   await db.update(schema.matches).set({ status: "encerrada" }).where(ne(schema.matches.status, "encerrada"));
   await db.insert(schema.matches).values({ date, place });
   revalidatePath("/", "layout");
-  return { ok: "Jogo criado. Mande o link no grupo para a galera confirmar." };
+
+  const label = new Date(`${date}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "numeric" });
+  const { sent } = await notifyAll({
+    title: `Jogo marcado: ${label}`,
+    body: `${place ? `${place}. ` : ""}Toque para confirmar se você vai.`,
+    url: "/",
+    tag: `jogo-${date}`,
+  });
+  return {
+    ok:
+      sent > 0
+        ? `Jogo criado. ${sent} ${sent === 1 ? "celular foi avisado" : "celulares foram avisados"}. Mande o link no grupo para quem não ativou os avisos.`
+        : "Jogo criado. Ninguém ativou os avisos ainda, então mande o link no grupo para a galera confirmar.",
+  };
 }
 
 export async function closeMatch(matchId: string) {

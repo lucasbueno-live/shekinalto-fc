@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { InstallHint } from "@/components/InstallGuide";
+import { PushToggle } from "@/components/PushToggle";
+import { getVapidKeys } from "@/lib/push";
 import { TeamsView } from "@/components/TeamsView";
 import { capitalize, formatMatchDate, PageTitle, Panel, Section } from "@/components/ui";
 import { requirePlayer } from "@/lib/auth";
@@ -10,13 +12,14 @@ import { teamsText } from "@/lib/whatsapp";
 
 export default async function JogoPage() {
   const me = await requirePlayer();
-  const match = await getCurrentMatch();
+  const [match, vapid] = await Promise.all([getCurrentMatch(), getVapidKeys()]);
   const isAdmin = me.role === "admin";
 
   if (!match) {
     return (
       <>
         <InstallHint />
+      <PushToggle publicKey={vapid.publicKey} compact />
         <PageTitle>Jogo da semana</PageTitle>
         <Panel>
           <p>Ainda não tem jogo marcado.</p>
@@ -43,6 +46,7 @@ export default async function JogoPage() {
   return (
     <>
       <InstallHint />
+      <PushToggle publicKey={vapid.publicKey} compact />
       <PageTitle sub={match.place ?? undefined}>
         {capitalize(dateLabel)}
       </PageTitle>
