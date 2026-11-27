@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { InstallHint } from "@/components/InstallGuide";
 import { TeamsView } from "@/components/TeamsView";
 import { capitalize, formatMatchDate, PageTitle, Panel, Section } from "@/components/ui";
 import { requirePlayer } from "@/lib/auth";
@@ -15,6 +16,7 @@ export default async function JogoPage() {
   if (!match) {
     return (
       <>
+        <InstallHint />
         <PageTitle>Jogo da semana</PageTitle>
         <Panel>
           <p>Ainda não tem jogo marcado.</p>
@@ -40,6 +42,7 @@ export default async function JogoPage() {
 
   return (
     <>
+      <InstallHint />
       <PageTitle sub={match.place ?? undefined}>
         {capitalize(dateLabel)}
       </PageTitle>

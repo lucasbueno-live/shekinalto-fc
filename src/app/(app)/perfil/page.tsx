@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { logout } from "@/app/actions";
 import { PhotoPicker } from "@/components/PhotoPicker";
 import { PlayerCard } from "@/components/PlayerCard";
@@ -20,6 +21,9 @@ export default async function PerfilPage({ searchParams }: { searchParams: Promi
           <p className="mt-1 text-chalk-dim">
             Coloque sua foto e faça sua autoavaliação aqui embaixo. Ela vale até 3 colegas votarem em você. Depois passe em Votar para avaliar a galera.
           </p>
+          <Link href="/instalar" className="mt-2 inline-block font-semibold text-bib underline underline-offset-4">
+            Colocar o app na tela inicial
+          </Link>
         </Panel>
       )}
       <div className="mb-7 flex justify-center">
@@ -52,6 +56,10 @@ export default async function PerfilPage({ searchParams }: { searchParams: Promi
           <PinForm />
         </Panel>
       </Section>
+
+      <Link href="/instalar" className="mb-4 flex min-h-12 items-center justify-center rounded-md border border-chalk/25 font-display text-lg font-extrabold active:bg-chalk/10">
+        Colocar o app na tela inicial
+      </Link>
 
       <form action={logout}>
         <Button variant="ghost" className="w-full">
