@@ -33,29 +33,38 @@ export async function getVapidKeys(): Promise<{ publicKey: string; privateKey: s
 
 export type PushPayload = { title: string; body: string; url: string; tag?: string };
 
-/** Manda um aviso para todos os jogadores ativos que ativaram. Apaga inscrições que não valem mais. */
-export async function notifyAll(payload: PushPayload): Promise<{ sent: number; removed: number }> {
+/** Manda um aviso para todos os jogadores ativos que ativaram. */
+export function notifyAll(payload: PushPayload) {
+  return notify(() => payload);
+}
+
+/**
+ * Manda um aviso por jogador: `payloadFor` devolve o texto de cada um, ou null para não avisar.
+ * Apaga as inscrições que o serviço de push diz que não valem mais (404/410).
+ */
+export async function notify(payloadFor: (playerId: string) => PushPayload | null): Promise<{ sent: number; removed: number }> {
   const db = await getDb();
   const subs = await db
     .select({
+      playerId: schema.pushSubscriptions.playerId,
       endpoint: schema.pushSubscriptions.endpoint,
       p256dh: schema.pushSubscriptions.p256dh,
       auth: schema.pushSubscriptions.auth,
     })
     .from(schema.pushSubscriptions)
     .innerJoin(schema.players, and(eq(schema.players.id, schema.pushSubscriptions.playerId), eq(schema.players.active, true)));
-  if (subs.length === 0) return { sent: 0, removed: 0 };
+  const targets = subs.map((s) => ({ ...s, payload: payloadFor(s.playerId) })).filter((s) => s.payload);
+  if (targets.length === 0) return { sent: 0, removed: 0 };
 
   const { publicKey, privateKey } = await getVapidKeys();
   const subject = process.env.VAPID_SUBJECT ?? "https://shekinalto-fc.vercel.app";
-  const body = JSON.stringify(payload);
   const gone: string[] = [];
   let sent = 0;
 
   await Promise.allSettled(
-    subs.map(async (s) => {
+    targets.map(async (s) => {
       try {
-        await sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, body, {
+        await sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, JSON.stringify(s.payload), {
           vapidDetails: { subject, publicKey, privateKey },
           TTL: 60 * 60 * 24 * 3, // se o celular estiver desligado, entrega em até 3 dias
           urgency: "high",

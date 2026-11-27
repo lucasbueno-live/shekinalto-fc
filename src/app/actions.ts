@@ -9,7 +9,7 @@ import { requireAdmin, requirePlayer } from "@/lib/auth";
 import { attrsFor, GK_ROLES, POSITIONS, type GkRole, type Position, type Ratings } from "@/lib/domain";
 import { evaluate } from "@/lib/draw";
 import { isValidInvite, rotateInviteCode } from "@/lib/invite";
-import { notifyAll } from "@/lib/push";
+import { notify, notifyAll } from "@/lib/push";
 import { listPlayers, listSignups, toDrawPlayer } from "@/lib/queries";
 import { createSession, destroySession } from "@/lib/session";
 
@@ -415,5 +415,23 @@ export async function publishDraw(matchId: string, teamIds: string[][]): Promise
   await db.insert(schema.draws).values({ matchId, teamCount: teamIds.length, result, published: true });
   await db.update(schema.matches).set({ status: "sorteada" }).where(eq(schema.matches.id, matchId));
   revalidatePath("/", "layout");
-  return { ok: "Times publicados." };
+
+  // Avisa cada jogador sorteado em qual time caiu. A tag faz um novo sorteio substituir o aviso anterior.
+  const teamOf = new Map<string, { name: string; gk: boolean; reserve: boolean }>();
+  for (const t of result.teams) {
+    for (const p of t.players) teamOf.set(p.id, { name: t.name, gk: p.id === t.goalkeeperId, reserve: t.reserves.includes(p.id) });
+  }
+  const label = new Date(`${m.date}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "numeric" });
+  const { sent } = await notify((playerId) => {
+    const t = teamOf.get(playerId);
+    if (!t) return null;
+    const role = t.gk ? ", no gol" : t.reserve ? ", começando na reserva" : "";
+    return {
+      title: `Times sorteados: ${label}`,
+      body: `Você está no ${t.name}${role}. Toque para ver os times.`,
+      url: "/",
+      tag: `times-${matchId}`,
+    };
+  });
+  return { ok: sent > 0 ? `Times publicados. ${sent} ${sent === 1 ? "celular foi avisado" : "celulares foram avisados"}.` : "Times publicados." };
 }
