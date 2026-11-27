@@ -25,7 +25,7 @@ export default async function ElencoPage({ searchParams }: { searchParams: Promi
   return (
     <>
       <PageTitle sub={`${players.length} jogadores, do maior para o menor`}>Elenco</PageTitle>
-      <nav aria-label="Filtrar por setor" className="-mx-4 mb-5 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
+      <nav aria-label="Filtrar por setor" className="mb-5 flex flex-wrap gap-2">
         {FILTERS.map((f) => (
           <Link
             key={f.key}

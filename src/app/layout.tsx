@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Barlow, Big_Shoulders } from "next/font/google";
+import { BRAND } from "@/lib/brand";
 import "./globals.css";
 
 const shoulders = Big_Shoulders({ subsets: ["latin"], weight: ["600", "800", "900"], variable: "--font-shoulders" });
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0e3b2c",
+  themeColor: BRAND.turf900,
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",

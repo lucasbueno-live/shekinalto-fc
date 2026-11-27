@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { subscribePush, unsubscribePush, type FormState } from "@/app/actions";
+import { Icon } from "./Icon";
 import { isStandalone } from "./InstallGuide";
 import { Button, FormMessage } from "./ui";
 
@@ -111,7 +112,10 @@ export function PushToggle({ publicKey, compact = false }: { publicKey: string; 
       {status === "carregando" && <p className="text-chalk-dim">Verificando este celular…</p>}
       {status === "ligado" && (
         <>
-          <p>✓ Este celular recebe um aviso quando o organizador marcar um jogo.</p>
+          <p className="flex items-start gap-2">
+            <Icon name="check" className="mt-0.5 size-5 text-bib" />
+            Este celular recebe um aviso quando o organizador marcar um jogo.
+          </p>
           <Button variant="ghost" type="button" onClick={disable} disabled={busy}>
             Desligar avisos
           </Button>

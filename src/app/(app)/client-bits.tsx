@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { setSignup } from "@/app/actions";
+import { Icon } from "@/components/Icon";
 import { Button } from "@/components/ui";
 import { whatsappUrl } from "@/lib/whatsapp";
 
@@ -16,11 +17,12 @@ export function SignupButtons({ matchId, current }: { matchId: string; current: 
     <div className="grid grid-cols-2 gap-3" aria-busy={pending}>
       <Button
         type="button"
-        variant={optimistic === "vou" ? "primary" : "ghost"}
+        variant={optimistic === "nao_vou" ? "ghost" : "primary"}
         aria-pressed={optimistic === "vou"}
         onClick={() => choose("vou")}
-        className="min-h-14 text-2xl"
+        className="flex min-h-14 items-center justify-center gap-2 text-2xl"
       >
+        {optimistic === "vou" && <Icon name="check" className="size-6" />}
         Vou
       </Button>
       <Button
@@ -28,8 +30,9 @@ export function SignupButtons({ matchId, current }: { matchId: string; current: 
         variant="ghost"
         aria-pressed={optimistic === "nao_vou"}
         onClick={() => choose("nao_vou")}
-        className={`min-h-14 text-2xl ${optimistic === "nao_vou" ? "bg-chalk/15" : ""}`}
+        className={`flex min-h-14 items-center justify-center gap-2 text-2xl ${optimistic === "nao_vou" ? "bg-chalk/15" : ""}`}
       >
+        {optimistic === "nao_vou" && <Icon name="check" className="size-6" />}
         Não vou
       </Button>
     </div>

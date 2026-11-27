@@ -44,6 +44,7 @@ export function BottomNav({ isAdmin, pendingVotes }: { isAdmin: boolean; pending
             </li>
           );
         })}
+        <li id="trilha-slot" className="w-14 shrink-0" />
       </ul>
     </nav>
   );

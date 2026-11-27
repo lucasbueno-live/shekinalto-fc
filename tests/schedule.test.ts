@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatMatchWhen, formatTime, isValidTime, matchStart, nextWeekdayISO, reminderDue } from "../src/lib/schedule";
+import { countdownLabel, daysUntil, formatMatchWhen, formatTime, isValidTime, matchStart, nextWeekdayISO, reminderDue, shortWhen } from "../src/lib/schedule";
 
 describe("horário do jogo", () => {
   it("valida HH:MM", () => {
@@ -33,5 +33,25 @@ describe("horário do jogo", () => {
     expect(nextWeekdayISO(3, new Date("2026-11-27T15:00:00Z"))).toBe("2026-12-02");
     // numa quarta, é o próprio dia
     expect(nextWeekdayISO(3, new Date("2026-12-02T15:00:00Z"))).toBe("2026-12-02");
+  });
+});
+
+
+describe("contagem até o jogo", () => {
+  const sexta = new Date("2026-11-27T15:00:00Z"); // sexta, 12h em Brasília
+  it("conta dias de calendário em Brasília", () => {
+    expect(daysUntil("2026-11-27", sexta)).toBe(0);
+    expect(daysUntil("2026-11-28", sexta)).toBe(1);
+    expect(daysUntil("2026-12-02", sexta)).toBe(5);
+    // 23h30 de sexta em Brasília já é sábado em UTC: continua sendo "hoje"
+    expect(daysUntil("2026-11-27", new Date("2026-11-28T02:30:00Z"))).toBe(0);
+  });
+  it("texto da contagem", () => {
+    expect(countdownLabel("2026-11-27", sexta)).toBe("É hoje");
+    expect(countdownLabel("2026-11-28", sexta)).toBe("É amanhã");
+    expect(countdownLabel("2026-12-02", sexta)).toBe("Faltam 5 dias");
+  });
+  it("data curta", () => {
+    expect(shortWhen("2026-12-02", "20:00")).toBe("quarta, 2/12 às 20h");
   });
 });

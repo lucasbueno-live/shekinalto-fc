@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { BRAND } from "@/lib/brand";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -7,8 +8,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Cartas, lista da semana e sorteio de times da nossa pelada.",
     start_url: "/",
     display: "standalone",
-    background_color: "#0e3b2c",
-    theme_color: "#0e3b2c",
+    background_color: BRAND.turf900,
+    theme_color: BRAND.turf900,
     lang: "pt-BR",
     icons: [
       { src: "/icon", sizes: "512x512", type: "image/png" },

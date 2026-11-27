@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { Icon } from "./Icon";
 import { SOUNDTRACK, type Track } from "@/lib/soundtrack";
 
 // Tipos mínimos da IFrame Player API do YouTube.
@@ -93,6 +95,14 @@ export function SoundtrackPlayer() {
   const [playing, setPlaying] = useState(false);
   const [track, setTrack] = useState<Track | null>(null);
   const [broken, setBroken] = useState(false);
+  // Com a trilha recolhida, o botão mora na barra de navegação (BottomNav reserva o espaço).
+  const [navSlot, setNavSlot] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    const find = () => setNavSlot(document.getElementById("trilha-slot"));
+    find();
+    const t = setTimeout(find, 0);
+    return () => clearTimeout(t);
+  }, []);
 
   const playIndex = useCallback((i: number) => {
     const order = orderRef.current;
@@ -189,9 +199,7 @@ export function SoundtrackPlayer() {
 
       {open ? (
         <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-turf-950/95 py-1.5 pl-4 pr-1.5 shadow-lg shadow-black/30 ring-1 ring-chalk/15 backdrop-blur">
-          <span aria-hidden className={`text-bib ${playing ? "animate-pulse" : ""}`}>
-            ♪
-          </span>
+          <Icon name="music" className={`size-4 text-bib ${playing ? "animate-pulse" : ""}`} />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold">{broken ? "Nenhuma faixa tocou aqui" : (track?.title ?? "Trilha")}</p>
           </div>
@@ -209,15 +217,19 @@ export function SoundtrackPlayer() {
           </IconButton>
         </div>
       ) : (
-        <button
-          type="button"
-          onClick={() => (started ? setOpen(true) : start())}
-          className="pointer-events-auto ml-auto flex min-h-11 items-center gap-1.5 rounded-full bg-turf-950/95 px-4 font-display text-lg font-extrabold shadow-lg shadow-black/30 ring-1 ring-chalk/15"
-          aria-label={started ? "Abrir trilha" : "Tocar trilha sonora"}
-        >
-          <span className={`text-bib ${playing ? "animate-pulse" : ""}`}>♪</span>
-          {started ? "" : "Trilha"}
-        </button>
+        navSlot &&
+        createPortal(
+          <button
+            type="button"
+            onClick={() => (started ? setOpen(true) : start())}
+            className="flex min-h-16 w-full flex-col items-center justify-center gap-0.5 text-xs font-semibold text-chalk-dim"
+            aria-label={started ? "Abrir trilha" : "Tocar trilha sonora"}
+          >
+            <Icon name="music" className={`size-6 ${playing ? "animate-pulse text-bib" : ""}`} />
+            Trilha
+          </button>,
+          navSlot,
+        )
       )}
     </div>
   );

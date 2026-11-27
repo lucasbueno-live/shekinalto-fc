@@ -1,7 +1,9 @@
 import { fmt1, type DrawResult, type TeamEval } from "@/lib/draw";
+import { Icon } from "./Icon";
 
-export const TEAM_COLORS = ["#f2f4ec", "#1d1f1e", "#f2862e", "#4a8fe0"];
-const GK_LABEL = { fixo: "Goleiro", improvisado: "Goleiro improvisado", rodizio: "Rodízio no gol" } as const;
+export const TEAM_COLORS = ["var(--color-team-a)", "var(--color-team-b)", "var(--color-team-c)", "var(--color-team-d)"];
+const GK_LABEL = { fixo: "Goleiro", improvisado: "Goleiro improvisado", rodizio: "Sem goleiro fixo: rodízio no gol" } as const;
+const LINE_NAME = { DEF: "defensor", MEI: "meio-campista", ATA: "atacante" } as const;
 
 /** Lista de um time. `onPick`/`selected` só são usados na tela de sorteio (troca manual). */
 export function TeamColumn({
@@ -17,6 +19,7 @@ export function TeamColumn({
 }) {
   const byId = new Map(team.players.map((p) => [p.id, p]));
   const field = team.starters.filter((id) => id !== team.goalkeeperId);
+  const missing = (Object.keys(team.lineDeficits) as (keyof typeof LINE_NAME)[]).map((l) => LINE_NAME[l]);
   const row = (id: string, muted = false) => {
     const p = byId.get(id)!;
     const isSel = selected === id;
@@ -58,8 +61,14 @@ export function TeamColumn({
           força <strong className="font-display text-xl font-black text-chalk tabular-nums">{fmt1(team.strength)}</strong>
         </span>
       </header>
-      <p className="px-2 text-xs font-semibold text-chalk-dim">{GK_LABEL[team.gkStatus]}</p>
-      <ul>{team.goalkeeperId ? row(team.goalkeeperId) : <li className="px-2 py-1 text-sm text-chalk-dim">Ninguém fixo: revezem no gol.</li>}</ul>
+      {missing.length > 0 && (
+        <p className="mb-1 flex items-center gap-1.5 px-2 text-sm text-chalk-dim">
+          <Icon name="alert" className="size-4 text-bib" />
+          Falta {missing.join(", ")} de origem
+        </p>
+      )}
+      <p className={`px-2 text-xs font-semibold ${team.gkStatus === "fixo" ? "text-chalk-dim" : "text-bib"}`}>{GK_LABEL[team.gkStatus]}</p>
+      {team.goalkeeperId && <ul>{row(team.goalkeeperId)}</ul>}
       <p className="mt-2 px-2 text-xs font-semibold text-chalk-dim">Em campo</p>
       <ul>
         {field.map((id) => row(id))}

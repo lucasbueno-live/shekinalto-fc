@@ -47,6 +47,23 @@ export function nextWeekdayISO(weekday: number, from = new Date()): string {
 export function shortWhen(date: string, time?: string | null): string {
   const d = new Date(`${date}T12:00:00${BR_OFFSET}`);
   const weekday = d.toLocaleDateString("pt-BR", { weekday: "long", timeZone: "America/Sao_Paulo" }).replace("-feira", "");
-  const dm = d.toLocaleDateString("pt-BR", { day: "numeric", month: "numeric", timeZone: "America/Sao_Paulo" });
+  const [, m, day] = date.split("-").map(Number);
+  const dm = `${day}/${m}`;
   return `${weekday}, ${dm}${time ? ` às ${formatTime(time)}` : ""}`;
+}
+
+/** Dias de calendário (Brasília) entre hoje e a data do jogo: 0 = hoje, 1 = amanhã. */
+export function daysUntil(date: string, now = new Date()): number {
+  const today = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+  const t = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+  const [y, m, d] = date.split("-").map(Number);
+  return Math.round((Date.UTC(y, m - 1, d) - t) / 86_400_000);
+}
+
+export function countdownLabel(date: string, now = new Date()): string {
+  const n = daysUntil(date, now);
+  if (n < 0) return "Já passou";
+  if (n === 0) return "É hoje";
+  if (n === 1) return "É amanhã";
+  return `Faltam ${n} dias`;
 }

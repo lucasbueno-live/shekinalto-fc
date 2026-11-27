@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { BRAND } from "@/lib/brand";
 
 export const size = { width: 512, height: 512 };
 export const contentType = "image/png";
@@ -14,7 +15,7 @@ export default function Icon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "repeating-linear-gradient(180deg,#0e3b2c 0 64px,#145239 64px 128px)",
+          background: `repeating-linear-gradient(180deg,${BRAND.turf900} 0 64px,${BRAND.turf800} 64px 128px)`,
           position: "relative",
         }}
       >
@@ -24,17 +25,17 @@ export default function Icon() {
             width: 300,
             height: 300,
             borderRadius: 300,
-            border: "14px solid #f2f4ec",
+            border: `14px solid ${BRAND.chalk}`,
           }}
         />
-        <div style={{ position: "absolute", left: 0, right: 0, top: 249, height: 14, background: "#f2f4ec" }} />
+        <div style={{ position: "absolute", left: 0, right: 0, top: 249, height: 14, background: BRAND.chalk }} />
         <div
           style={{
             width: 190,
             height: 190,
             borderRadius: 190,
-            background: "#f2862e",
-            color: "#0a2b20",
+            background: BRAND.bib,
+            color: BRAND.turf950,
             fontSize: 150,
             fontWeight: 900,
             display: "flex",

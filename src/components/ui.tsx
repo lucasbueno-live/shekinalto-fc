@@ -1,5 +1,6 @@
 // Peças pequenas de interface, compartilhadas entre as telas.
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { Icon } from "./Icon";
 
 export const inputCls =
   "w-full rounded-md border border-turf-600 bg-turf-950/70 px-3 py-3 text-base text-chalk placeholder:text-chalk-dim/60 focus:border-bib";
@@ -11,14 +12,14 @@ export function Button({
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "ghost" | "danger" }) {
   const v =
     variant === "primary"
-      ? "bg-bib text-turf-950 active:bg-bib-deep disabled:opacity-50"
+      ? "bg-bib text-turf-950 active:bg-bib-deep disabled:bg-turf-700 disabled:text-chalk-dim"
       : variant === "danger"
-        ? "border border-danger/60 text-danger active:bg-danger/10"
-        : "border border-chalk/25 text-chalk active:bg-chalk/10";
+        ? "border border-danger/60 text-danger active:bg-danger/10 disabled:border-chalk/15 disabled:text-chalk-dim"
+        : "border border-chalk/25 text-chalk active:bg-chalk/10 disabled:border-chalk/15 disabled:text-chalk-dim";
   return (
     <button
       {...rest}
-      className={`min-h-12 rounded-md px-4 font-display text-lg font-extrabold transition-colors ${v} ${className}`}
+      className={`min-h-12 rounded-md px-4 font-display text-lg font-extrabold transition-colors disabled:cursor-not-allowed ${v} ${className}`}
     />
   );
 }
@@ -58,8 +59,9 @@ export function FormMessage({ state }: { state?: { error?: string; ok?: string }
     );
   if (state.ok)
     return (
-      <p role="status" className="text-sm font-medium text-chalk">
-        ✓ {state.ok}
+      <p role="status" className="flex items-center gap-1.5 text-sm font-medium text-chalk">
+        <Icon name="check" className="size-4 text-bib" />
+        {state.ok}
       </p>
     );
   return null;

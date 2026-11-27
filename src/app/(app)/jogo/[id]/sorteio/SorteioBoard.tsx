@@ -115,14 +115,6 @@ export function SorteioBoard({ matchId, players, dateLabel, positions }: Props) 
             </strong>
           </div>
 
-          {result.warnings.length > 0 && (
-            <ul className="flex flex-col gap-1 text-sm text-chalk-dim" aria-label="Avisos do sorteio">
-              {result.warnings.map((w) => (
-                <li key={w}>⚠ {w}</li>
-              ))}
-            </ul>
-          )}
-
           <p className="text-sm text-chalk-dim" aria-live="polite">
             {selected ? "Agora toque em alguém do outro time para trocar." : "Para trocar dois jogadores, toque em um e depois no outro."}
           </p>

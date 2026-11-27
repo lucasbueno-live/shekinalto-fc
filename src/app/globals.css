@@ -1,3 +1,6 @@
+/* Hallmark · checked: 2026-11-27 · genre: playful (inferred) · scope: app
+ * floor: fixed 30a (icons), 63 (card meta), 48 (card, team and stripe colours), 34, 39a/26b (disabled) · structural: home, soundtrack, vote input, filters, draw warnings
+ * built: the project · redesign: polish + app-screen recomposition (home) */
 @import "tailwindcss";
 
 @theme {
@@ -19,8 +22,43 @@
   --font-sans: var(--font-barlow), system-ui, sans-serif;
 }
 
+@theme static {
+  /* Tokens usados só em estilos inline e degradês (alguns montados em tempo de execução):
+     "static" faz o Tailwind emitir todos, mesmo sem classe que os use. */
+  --color-turf-stripe: #103f2f;
+
+  /* cartas: três paradas do degradê, tinta e borda de cada faixa */
+  --color-card-bronze-hi: #d29a63;
+  --color-card-bronze-mid: #9c6232;
+  --color-card-bronze-lo: #6f4220;
+  --color-card-bronze-ink: #2b1606;
+  --color-card-bronze-edge: #e8bb8c;
+  --color-card-prata-hi: #eef2f4;
+  --color-card-prata-mid: #b9c3c9;
+  --color-card-prata-lo: #7d8a92;
+  --color-card-prata-ink: #1d262b;
+  --color-card-prata-edge: #fbfcfc;
+  --color-card-ouro-hi: #f7dc7f;
+  --color-card-ouro-mid: #d9a52e;
+  --color-card-ouro-lo: #9a6c12;
+  --color-card-ouro-ink: #2e1f00;
+  --color-card-ouro-edge: #fff1b8;
+
+  /* coletes dos times */
+  --color-team-a: #f2f4ec;
+  --color-team-b: #1d1f1e;
+  --color-team-c: #f2862e;
+  --color-team-d: #4a8fe0;
+}
+
+html,
+body {
+  overflow-x: clip;
+}
+
 html {
   color-scheme: dark;
+  scrollbar-color: var(--color-turf-600) var(--color-turf-950);
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -30,11 +68,21 @@ body {
   background-image: repeating-linear-gradient(
     180deg,
     var(--color-turf-900) 0 96px,
-    #103f2f 96px 192px
+    var(--color-turf-stripe) 96px 192px
   );
   color: var(--color-chalk);
   font-family: var(--font-sans);
   min-height: 100dvh;
+}
+
+::selection {
+  background: var(--color-bib);
+  color: var(--color-turf-950);
+}
+
+input,
+textarea {
+  caret-color: var(--color-bib);
 }
 
 :focus-visible {
