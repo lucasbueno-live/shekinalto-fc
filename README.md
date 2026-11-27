@@ -37,3 +37,23 @@ Variável opcional: `SESSION_SECRET` (qualquer texto longo). Sem ela, a chave da
 - **Avisos (web push):** cada um ativa em Perfil → Avisos de jogo (ou no aviso da tela inicial). Quando o organizador marca um jogo, os celulares inscritos recebem uma notificação que abre a lista; quando publica os times, cada sorteado recebe o próprio time (ex.: "Você está no Time B, no gol"), e um novo sorteio substitui o aviso anterior. No iPhone só funciona com o app instalado na tela inicial (iOS 16.4+). As chaves VAPID são geradas e guardadas na tabela `settings`; o service worker é `public/sw.js`.
 - **Fotos:** cada um escolhe a própria foto no Perfil, e o organizador pode trocar a de qualquer um em Organizar → Opções. O celular recorta a foto em quadrado e reduz para 320×320 antes de enviar (dá cerca de 30 KB). A foto fica guardada no próprio banco, na tabela `player_photos`, então não precisa configurar armazenamento extra na Vercel.
 - **Trilha** (`src/lib/soundtrack.ts`): toca pelo player oficial do YouTube incorporado. Para trocar uma música, troque o id do vídeo e o título nesse arquivo. O som só começa depois de um toque, por regra dos navegadores. No iPhone, a música para quando a tela bloqueia.
+
+## Quer contribuir?
+
+PRs são bem-vindos. O caminho:
+
+1. Faça um fork, clone e rode `npm install`.
+2. `npm run seed` cria um banco local de teste (`.pglite`) com 21 jogadores fictícios. Não precisa de conta em nada, nem de `.env`. Rode com o servidor parado.
+3. `npm run dev` e abra http://localhost:3000. Os PINs de teste estão no topo de `scripts/seed.ts`.
+4. Antes do PR: `npm test`, `npx tsc --noEmit` e `npm run lint`.
+5. Abra o PR contra a branch `master` explicando o que muda e como testou. Se mexer em tela, mande um print no tamanho de celular, que é onde a galera usa.
+
+Mapa rápido do código:
+
+- `src/lib/rating.ts`: cálculo das notas da carta (tem testes em `tests/rating.test.ts`).
+- `src/lib/draw.ts`: sorteio dos times (tem testes em `tests/draw.test.ts`). Mudou o algoritmo, atualize os testes.
+- `src/app/actions.ts`: todas as ações do servidor (login, voto, presença, sorteio, convite, avisos).
+- `src/db/schema.ts`: tabelas. Mudou o schema, rode `npm run db:generate` e inclua a migration gerada em `drizzle/`.
+- `src/lib/soundtrack.ts`: a trilha sonora.
+
+Duas regras que não mudam: os votos são anônimos (nenhuma tela ou rota pode mostrar quem deu qual nota) e o app precisa funcionar bem no celular.
