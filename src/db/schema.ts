@@ -76,7 +76,11 @@ export const votes = pgTable(
 export const matches = pgTable("matches", {
   id: uuid().primaryKey().defaultRandom(),
   date: date().notNull(),
+  /** Horário de início em Brasília, "HH:MM". Jogos antigos podem não ter. */
+  time: text(),
   place: text(),
+  /** Quando o lembrete de 1 hora antes foi enviado (evita mandar duas vezes). */
+  reminderSentAt: ts(),
   status: text().$type<MatchStatus>().notNull().default("aberta"),
   createdAt: ts().notNull().defaultNow(),
 });

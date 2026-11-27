@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { formatMatchDate, PageTitle } from "@/components/ui";
+import { PageTitle } from "@/components/ui";
+import { formatMatchWhen } from "@/lib/schedule";
 import { requireAdmin } from "@/lib/auth";
 import { getMatch, listPlayers, listSignups, toDrawPlayer } from "@/lib/queries";
 import { SorteioBoard } from "./SorteioBoard";
@@ -13,7 +14,7 @@ export default async function SorteioPage({ params }: { params: Promise<{ id: st
   const [signups, players] = await Promise.all([listSignups(id), listPlayers()]);
   const byId = new Map(players.map((p) => [p.id, p]));
   const confirmed = signups.filter((s) => s.status === "vou" && byId.has(s.playerId)).map((s) => toDrawPlayer(byId.get(s.playerId)!));
-  const dateLabel = formatMatchDate(match.date);
+  const dateLabel = formatMatchWhen(match.date, match.time);
 
   return (
     <>

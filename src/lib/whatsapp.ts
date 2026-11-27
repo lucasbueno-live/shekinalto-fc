@@ -21,8 +21,17 @@ export function teamsText(result: DrawResult, dateLabel: string, positions: Reco
   return lines.join("\n");
 }
 
-export function inviteText(dateLabel: string, place: string | null, url: string) {
-  return `⚽ Lista do jogo de ${dateLabel}${place ? `, ${place}` : ""}.\nConfirma aqui se você vai: ${url}`;
+/** Texto da lista do jogo para o WhatsApp, com os confirmados em ordem. */
+export function inviteText(when: string, place: string | null, url: string, confirmed: string[] = []) {
+  const lines = [`⚽ Lista do jogo de ${when}${place ? `, ${place}` : ""}.`, ""];
+  if (confirmed.length) {
+    lines.push(`Confirmados (${confirmed.length}):`);
+    confirmed.forEach((name, i) => lines.push(`${i + 1}. ${name}`));
+  } else {
+    lines.push("Ninguém confirmou ainda.");
+  }
+  lines.push("", `Confirma no app se você vai: ${url}`);
+  return lines.join("\n");
 }
 
 export function inviteJoinText(url: string) {

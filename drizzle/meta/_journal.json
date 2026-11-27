@@ -29,6 +29,13 @@
       "when": 1795794521407,
       "tag": "0003_avisos",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795797936126,
+      "tag": "0004_horario",
+      "breakpoints": true
     }
   ]
 }

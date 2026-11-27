@@ -3,7 +3,8 @@ import { InstallHint } from "@/components/InstallGuide";
 import { PushToggle } from "@/components/PushToggle";
 import { getVapidKeys } from "@/lib/push";
 import { TeamsView } from "@/components/TeamsView";
-import { capitalize, formatMatchDate, PageTitle, Panel, Section } from "@/components/ui";
+import { capitalize, PageTitle, Panel, Section } from "@/components/ui";
+import { formatMatchWhen } from "@/lib/schedule";
 import { requirePlayer } from "@/lib/auth";
 import { POSITION_LABEL } from "@/lib/domain";
 import { displayName, getCurrentMatch, getPublishedDraw, listPlayers, listSignups } from "@/lib/queries";
@@ -40,7 +41,7 @@ export default async function JogoPage() {
   const going = signups.filter((s) => s.status === "vou" && byId.has(s.playerId));
   const notGoing = signups.filter((s) => s.status === "nao_vou" && byId.has(s.playerId));
   const mine = signups.find((s) => s.playerId === me.id)?.status ?? null;
-  const dateLabel = formatMatchDate(match.date);
+  const dateLabel = formatMatchWhen(match.date, match.time);
   const positions = Object.fromEntries(players.map((p) => [p.id, p.primaryPosition]));
 
   return (

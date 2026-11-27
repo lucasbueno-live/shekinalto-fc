@@ -10,6 +10,7 @@ import { attrsFor, GK_ROLES, POSITIONS, type GkRole, type Position, type Ratings
 import { evaluate } from "@/lib/draw";
 import { isValidInvite, rotateInviteCode } from "@/lib/invite";
 import { notify, notifyAll } from "@/lib/push";
+import { isValidTime, matchStart, shortWhen } from "@/lib/schedule";
 import { listPlayers, listSignups, toDrawPlayer } from "@/lib/queries";
 import { createSession, destroySession } from "@/lib/session";
 
@@ -342,16 +343,18 @@ export async function setPlayerRole(id: string, role: "admin" | "player") {
 export async function createMatch(_: FormState, fd: FormData): Promise<FormState> {
   await requireAdmin();
   const date = str(fd, "date");
+  const time = str(fd, "time");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { error: "Escolha a data do jogo." };
+  if (!isValidTime(time)) return { error: "Escolha o horário do jogo." };
+  if (matchStart(date, time).getTime() < Date.now()) return { error: "Esse horário já passou. Confira a data e a hora." };
   const place = str(fd, "place").slice(0, 60) || null;
   const db = await getDb();
   await db.update(schema.matches).set({ status: "encerrada" }).where(ne(schema.matches.status, "encerrada"));
-  await db.insert(schema.matches).values({ date, place });
+  await db.insert(schema.matches).values({ date, time, place });
   revalidatePath("/", "layout");
 
-  const label = new Date(`${date}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "numeric" });
   const { sent } = await notifyAll({
-    title: `Jogo marcado: ${label}`,
+    title: `Jogo marcado: ${shortWhen(date, time)}`,
     body: `${place ? `${place}. ` : ""}Toque para confirmar se você vai.`,
     url: "/",
     tag: `jogo-${date}`,
@@ -359,9 +362,27 @@ export async function createMatch(_: FormState, fd: FormData): Promise<FormState
   return {
     ok:
       sent > 0
-        ? `Jogo criado. ${sent} ${sent === 1 ? "celular foi avisado" : "celulares foram avisados"}. Mande o link no grupo para quem não ativou os avisos.`
-        : "Jogo criado. Ninguém ativou os avisos ainda, então mande o link no grupo para a galera confirmar.",
+        ? `Jogo criado. ${sent} ${sent === 1 ? "celular foi avisado" : "celulares foram avisados"}. Mande a lista no grupo para quem não ativou os avisos.`
+        : "Jogo criado. Ninguém ativou os avisos ainda, então mande a lista no grupo para a galera confirmar.",
   };
+}
+
+/** Corrige horário e local do jogo aberto, sem perder a lista. Mudou o horário, o lembrete volta a valer. */
+export async function updateMatch(_: FormState, fd: FormData): Promise<FormState> {
+  await requireAdmin();
+  const matchId = str(fd, "matchId");
+  const time = str(fd, "time");
+  if (!isValidTime(time)) return { error: "Escolha o horário do jogo." };
+  const place = str(fd, "place").slice(0, 60) || null;
+  const db = await getDb();
+  const [m] = await db.select().from(schema.matches).where(eq(schema.matches.id, matchId));
+  if (!m || m.status === "encerrada") return { error: "Esse jogo já foi encerrado." };
+  await db
+    .update(schema.matches)
+    .set({ time, place, ...(m.time !== time ? { reminderSentAt: null } : {}) })
+    .where(eq(schema.matches.id, matchId));
+  revalidatePath("/", "layout");
+  return { ok: "Jogo atualizado." };
 }
 
 export async function closeMatch(matchId: string) {
@@ -421,7 +442,7 @@ export async function publishDraw(matchId: string, teamIds: string[][]): Promise
   for (const t of result.teams) {
     for (const p of t.players) teamOf.set(p.id, { name: t.name, gk: p.id === t.goalkeeperId, reserve: t.reserves.includes(p.id) });
   }
-  const label = new Date(`${m.date}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "numeric" });
+  const label = shortWhen(m.date, m.time);
   const { sent } = await notify((playerId) => {
     const t = teamOf.get(playerId);
     if (!t) return null;

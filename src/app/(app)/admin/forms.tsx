@@ -1,12 +1,12 @@
 "use client";
 
 import { useActionState, useState, useTransition } from "react";
-import { closeMatch, createMatch, createPlayer, regenerateInvite, resetPin, setPlayerActive, setPlayerRole, type FormState } from "@/app/actions";
+import { closeMatch, createMatch, createPlayer, updateMatch, regenerateInvite, resetPin, setPlayerActive, setPlayerRole, type FormState } from "@/app/actions";
 import { PhotoPicker } from "@/components/PhotoPicker";
 import { PositionFields } from "@/components/PositionFields";
 import { Button, FormMessage, inputCls } from "@/components/ui";
 
-export function MatchForm({ defaultDate, defaultPlace }: { defaultDate: string; defaultPlace: string }) {
+export function MatchForm({ defaultDate, defaultTime, defaultPlace }: { defaultDate: string; defaultTime: string; defaultPlace: string }) {
   const [state, action, pending] = useActionState(createMatch, undefined);
   return (
     <form action={action} className="flex flex-col gap-3">
@@ -16,12 +16,40 @@ export function MatchForm({ defaultDate, defaultPlace }: { defaultDate: string; 
           <input type="date" name="date" defaultValue={defaultDate} className={inputCls} required />
         </label>
         <label className="flex flex-col gap-1.5">
+          <span className="font-semibold">Horário</span>
+          <input type="time" name="time" defaultValue={defaultTime} className={inputCls} required />
+        </label>
+      </div>
+      <label className="flex flex-col gap-1.5">
+        <span className="font-semibold">Local</span>
+        <input name="place" defaultValue={defaultPlace} className={inputCls} placeholder="Opcional" />
+      </label>
+      <p className="text-sm text-chalk-dim">Quem ativou os avisos recebe uma notificação agora e um lembrete 1 hora antes do jogo.</p>
+      <FormMessage state={state} />
+      <Button disabled={pending}>{pending ? "Abrindo…" : "Abrir lista"}</Button>
+    </form>
+  );
+}
+
+export function EditMatchForm({ matchId, time, place }: { matchId: string; time: string; place: string }) {
+  const [state, action, pending] = useActionState(updateMatch, undefined);
+  return (
+    <form action={action} className="flex flex-col gap-3">
+      <input type="hidden" name="matchId" value={matchId} />
+      <div className="grid grid-cols-2 gap-3">
+        <label className="flex flex-col gap-1.5">
+          <span className="font-semibold">Horário</span>
+          <input type="time" name="time" defaultValue={time} className={inputCls} required />
+        </label>
+        <label className="flex flex-col gap-1.5">
           <span className="font-semibold">Local</span>
-          <input name="place" defaultValue={defaultPlace} className={inputCls} placeholder="Opcional" />
+          <input name="place" defaultValue={place} className={inputCls} placeholder="Opcional" />
         </label>
       </div>
       <FormMessage state={state} />
-      <Button disabled={pending}>{pending ? "Abrindo…" : "Abrir lista"}</Button>
+      <Button variant="ghost" disabled={pending}>
+        {pending ? "Salvando…" : "Salvar sem mexer na lista"}
+      </Button>
     </form>
   );
 }

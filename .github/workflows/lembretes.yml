@@ -1,0 +1,24 @@
+# Chama o app a cada 10 minutos para mandar o lembrete de 1 hora antes do jogo.
+# O plano gratuito da Vercel só agenda uma vez por dia, por isso o agendador fica aqui.
+# Precisa do secret CRON_SECRET no repositório (o mesmo valor configurado na Vercel).
+name: Lembretes de jogo
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  lembrete:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Mandar lembretes que venceram
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          curl -fsS --max-time 60 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            https://shekinalto-fc.vercel.app/api/lembretes

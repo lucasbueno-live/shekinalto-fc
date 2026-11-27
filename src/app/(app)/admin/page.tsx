@@ -1,24 +1,23 @@
 import { headers } from "next/headers";
-import { formatMatchDate, PageTitle, Panel, Section } from "@/components/ui";
+import { PageTitle, Panel, Section } from "@/components/ui";
 import { requireAdmin } from "@/lib/auth";
 import { POSITION_LABEL } from "@/lib/domain";
-import { displayName, getCurrentMatch, listPlayers } from "@/lib/queries";
+import { displayName, getCurrentMatch, listPlayers, listSignups } from "@/lib/queries";
+import { formatMatchWhen, nextWeekdayISO } from "@/lib/schedule";
 import { inviteJoinText, inviteText } from "@/lib/whatsapp";
 import { CopyButton } from "../client-bits";
-import { CloseMatchButton, MatchForm, NewInviteButton, NewPlayerForm, PlayerAdminRow } from "./forms";
+import { CloseMatchButton, EditMatchForm, MatchForm, NewInviteButton, NewPlayerForm, PlayerAdminRow } from "./forms";
 import { getInviteCode } from "@/lib/invite";
-
-function nextSaturdayISO() {
-  const d = new Date();
-  d.setDate(d.getDate() + ((6 - d.getDay() + 7) % 7));
-  return d.toLocaleDateString("sv-SE"); // AAAA-MM-DD no fuso local
-}
 
 export default async function AdminPage() {
   const me = await requireAdmin();
   const [match, players, inviteCode] = await Promise.all([getCurrentMatch(), listPlayers({ includeInactive: true }), getInviteCode()]);
   const h = await headers();
   const origin = `${h.get("x-forwarded-proto") ?? "http"}://${h.get("host")}`;
+  const byId = new Map(players.map((p) => [p.id, p]));
+  const confirmed = match
+    ? (await listSignups(match.id)).filter((s) => s.status === "vou" && byId.get(s.playerId)?.active).map((s) => displayName(byId.get(s.playerId)!))
+    : [];
   const sorted = [...players].sort((a, b) => Number(b.active) - Number(a.active) || displayName(a).localeCompare(displayName(b), "pt-BR"));
 
   return (
@@ -30,10 +29,19 @@ export default async function AdminPage() {
           {match ? (
             <div className="flex flex-col gap-2">
               <p>
-                Lista aberta para <strong>{formatMatchDate(match.date)}</strong>
-                {match.place ? `, ${match.place}` : ""}.
+                Lista aberta para <strong>{formatMatchWhen(match.date, match.time)}</strong>
+                {match.place ? `, ${match.place}` : ""}. {confirmed.length} {confirmed.length === 1 ? "confirmado" : "confirmados"}.
               </p>
-              <CopyButton text={inviteText(formatMatchDate(match.date), match.place, origin)} label="Copiar lista do jogo" />
+              {!match.time && (
+                <p className="text-sm text-danger">Este jogo está sem horário, então o lembrete de 1 hora antes não sai. Coloque o horário abaixo.</p>
+              )}
+              <CopyButton text={inviteText(formatMatchWhen(match.date, match.time), match.place, origin, confirmed)} label="Copiar lista do jogo" />
+              <details open={!match.time}>
+                <summary className="cursor-pointer text-sm font-semibold text-chalk-dim">Mudar horário ou local</summary>
+                <div className="mt-3">
+                  <EditMatchForm matchId={match.id} time={match.time ?? "20:00"} place={match.place ?? ""} />
+                </div>
+              </details>
               <CloseMatchButton matchId={match.id} />
             </div>
           ) : (
@@ -42,7 +50,7 @@ export default async function AdminPage() {
           <details open={!match} className="group">
             <summary className="cursor-pointer font-semibold text-bib">{match ? "Marcar outro jogo (fecha o atual)" : "Marcar jogo"}</summary>
             <div className="mt-3">
-              <MatchForm defaultDate={nextSaturdayISO()} defaultPlace={match?.place ?? ""} />
+              <MatchForm defaultDate={nextWeekdayISO(3)} defaultTime={match?.time ?? "20:00"} defaultPlace={match?.place ?? ""} />
             </div>
           </details>
         </Panel>
